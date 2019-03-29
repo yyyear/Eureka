@@ -390,9 +390,9 @@ public struct InlineRowHideOptions: OptionSet {
     /// Collapse when first responder changes.
     public static let FirstResponderChanges = InlineRowHideOptions(.firstResponderChanges)
 }
-
+import QMUIKit
 /// View controller that shows a form.
-open class FormViewController: UIViewController, FormViewControllerProtocol, FormDelegate {
+open class FormViewController: QMUICommonViewController, FormViewControllerProtocol, FormDelegate {
 
     @IBOutlet public var tableView: UITableView!
 

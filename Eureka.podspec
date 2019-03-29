@@ -13,4 +13,6 @@ Pod::Spec.new do |s|
   s.resources = 'Source/Resources/Eureka.bundle'
   s.requires_arc = true
   s.swift_version = '4.2'
+
+  s.dependency "QMUIKit"
 end

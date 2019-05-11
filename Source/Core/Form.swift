@@ -171,7 +171,7 @@ extension Form: MutableCollection {
 
             if position < kvoWrapper.sections.count {
                 let oldSection = kvoWrapper.sections[position]
-                let oldSectionIndex = kvoWrapper._allSections.index(of: oldSection as! Section)!
+                let oldSectionIndex = kvoWrapper._allSections.firstIndex(of: oldSection as! Section)!
                 // Remove the previous section from the form
                 kvoWrapper._allSections[oldSectionIndex].willBeRemovedFromForm()
                 kvoWrapper._allSections[oldSectionIndex] = newValue
@@ -217,7 +217,7 @@ extension Form : RangeReplaceableCollection {
         for i in subRange.lowerBound..<subRange.upperBound {
             if let section = kvoWrapper.sections.object(at: i) as? Section {
                 section.willBeRemovedFromForm()
-                kvoWrapper._allSections.remove(at: kvoWrapper._allSections.index(of: section)!)
+                kvoWrapper._allSections.remove(at: kvoWrapper._allSections.firstIndex(of: section)!)
             }
         }
         kvoWrapper.sections.replaceObjects(in: NSRange(location: subRange.lowerBound, length: subRange.upperBound - subRange.lowerBound),
@@ -245,7 +245,7 @@ extension Form : RangeReplaceableCollection {
         guard index != 0 else { return 0 }
 
         let section = kvoWrapper.sections[index-1]
-        if let i = kvoWrapper._allSections.index(of: section as! Section) {
+        if let i = kvoWrapper._allSections.firstIndex(of: section as! Section) {
             return i + 1
         }
         return kvoWrapper._allSections.count
@@ -330,21 +330,24 @@ extension Form {
 
     func removeRowObservers(from taggable: Taggable, rowTags: [String], type: ConditionType) {
         for rowTag in rowTags {
-            guard var arr = rowObservers[rowTag]?[type], let index = arr.index(where: { $0 === taggable }) else { continue }
-            arr.remove(at: index)
+            guard let arr = rowObservers[rowTag]?[type], let index = arr.firstIndex(where: { $0 === taggable }) else { continue }
+            rowObservers[rowTag]?[type]?.remove(at: index)
+            if rowObservers[rowTag]?[type]?.isEmpty == true {
+                rowObservers[rowTag] = nil
+            }
         }
     }
 
     func nextRow(for row: BaseRow) -> BaseRow? {
         let allRows = rows
-        guard let index = allRows.index(of: row) else { return nil }
+        guard let index = allRows.firstIndex(of: row) else { return nil }
         guard index < allRows.count - 1 else { return nil }
         return allRows[index + 1]
     }
 
     func previousRow(for row: BaseRow) -> BaseRow? {
         let allRows = rows
-        guard let index = allRows.index(of: row) else { return nil }
+        guard let index = allRows.firstIndex(of: row) else { return nil }
         guard index > 0 else { return nil }
         return allRows[index - 1]
     }
@@ -355,7 +358,7 @@ extension Form {
 
     func showSection(_ section: Section) {
         guard !kvoWrapper.sections.contains(section) else { return }
-        guard var index = kvoWrapper._allSections.index(of: section) else { return }
+        guard var index = kvoWrapper._allSections.firstIndex(of: section) else { return }
         var formIndex = NSNotFound
         while formIndex == NSNotFound && index > 0 {
             index = index - 1
@@ -390,13 +393,13 @@ extension Form {
 extension Form {
 
     @discardableResult
-    public func validate(includeHidden: Bool = false, includeDisabled: Bool = true) -> [ValidationError] {
+    public func validate(includeHidden: Bool = false, includeDisabled: Bool = true, quietly: Bool = false) -> [ValidationError] {
         let rowsWithHiddenFilter = includeHidden ? allRows : rows
         let rowsWithDisabledFilter = includeDisabled ? rowsWithHiddenFilter : rowsWithHiddenFilter.filter { $0.isDisabled != true }
         
         return rowsWithDisabledFilter.reduce([ValidationError]()) { res, row in
             var res = res
-            res.append(contentsOf: row.validate())
+            res.append(contentsOf: row.validate(quietly: quietly))
             return res
         }
     }

@@ -74,7 +74,7 @@ open class BaseRow: BaseRowType {
         get { return nil }
     }
 
-    public func validate() -> [ValidationError] {
+    public func validate(quietly: Bool = false) -> [ValidationError] {
         return []
     }
 
@@ -137,7 +137,7 @@ open class BaseRow: BaseRowType {
      Returns the IndexPath where this row is in the current form.
      */
     public final var indexPath: IndexPath? {
-        guard let sectionIndex = section?.index, let rowIndex = section?.index(of: self) else { return nil }
+        guard let sectionIndex = section?.index, let rowIndex = section?.firstIndex(of: self) else { return nil }
         return IndexPath(row: rowIndex, section: sectionIndex)
     }
 
